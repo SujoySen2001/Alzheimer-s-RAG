@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Crimson+Pro">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" integrity="sha512-MV7K8+y+gLIBoVD59lQIYicR65iaqukzvf/nwasF0nqhPay5w/9lJmVM2hMDcnK1OnMGCdVK+iQrJ7lzPJQd1w==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style_login.css') }}">
+    <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+    <title>Login Page</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@700&display=swap');
+      </style>
+      <script type="text/javascript">
+        /*function valid(){
+            if(document.getElementById("user1").value.trim().length<1){
+                alert("Please Enter the UserName");
+                document.getElementById("user1").focus()
+                return false
+            }
+            return true
+        }*/
+
+      </script>
+</head>
+<body>
+    <div class="container">
+        <div class="forms-container">
+            <div class="signin-signup">
+                <form action="/login" method="post" class="sign-in-form" onsubmit="return valid1()">
+                    <h2 class="title">Sign in</h2>
+                    <div class="input-field">
+                        <i class="fas fa-user"></i>
+                        <input type="text" placeholder="Username"  id ="username" name="username">
+                    </div>
+                    <div class="input-field">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" placeholder="Password"  id ="password" name="password">
+                    </div>
+                    <input type="submit" value="Login" class="btn_solid" >
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="messages">
+                    {% for category, message in messages %}
+                        <p class="{{ category }}">{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+                    <p class="social-text">Or Sign With Social Platforms</p>
+                    <div class="social-media">
+                        <a href="#" class="social-icon">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="social-icon">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="social-icon">
+                            <i class="fab fa-google"></i>
+                        </a>
+                        <a href="#" class="social-icon">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                    </div>
+                </form>
+                <form action="/signup" method="post" class="sign-up-form" onsubmit="return valid()">
+                    <h2 class="title">Sign Up</h2>
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="messages">
+                    {% for category, message in messages %}
+                        <p class="{{ category }}">{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+                    <div class="input-field">
+                        <i class="fas fa-envelope"></i>
+                        <input type="text" placeholder="Email" id="email" name="email">
+                    </div>
+                    <div class="input-field">
+                        <i class="fas fa-user"></i>
+                        <input type="text" placeholder="Username" id="user1" name="name" >
+                    </div>
+                    <div class="input-field">
+                        <i class="fas fa-phone"></i>
+                        <input type="text" placeholder="phone-no" id="phone-no" name="phno">
+                    </div>
+                    <div class="input-field">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" placeholder="Password"  id="pass" name="password">
+                    </div>
+                    <div class="input-field">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" placeholder="Confirm-Password" id="c-pass" name="cpassword">
+                    </div>
+                    <input type="submit" value="Sign-Up" class="btn_solid" >
+                    <p class="social-text">Or Sign Up With Social Platforms</p>
+                    <div class="social-media">
+                        <a href="#" class="social-icon">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="social-icon">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="social-icon">
+                            <i class="fab fa-google"></i>
+                        </a>
+                        <a href="#" class="social-icon">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div class="panels-container">
+            <div class="panel left-panel">
+                <div class="content">
+                    <h1>New here</h1>
+                    <p>If you are new here please Sign Up and enjoy yourself</p>
+                    <button class="btn_solid" id="sign-up-btn">Sign up</button>
+                </div>
+                <img src="images/undraw_book_lover_re_rwjy.svg " class="image" alt="">
+            </div>
+            <div class="panel right-panel">
+                <div class="content">
+                    <h1>One of us?</h1>
+                    <p>Are you already sign in?. if you are so Sign in and enjoy your self</p>
+                    <button class="btn_solid" id="sign-in-btn">Sign In</button>
+                </div>
+                <img src="images/undraw_on_the_office_re_cxds.svg " class="image" alt="">
+            </div>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='js/login_signup.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/valid.js') }}"></script>
+</body>
+</html>

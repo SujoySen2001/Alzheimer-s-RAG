@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatUI</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    .chat-hist {
+      max-height: calc(100vh - 160px);
+      overflow-y: auto;
+    }
+    .message-user {
+      background-color: #D1E8E2;
+      border-radius: 20px;
+      padding: 10px 20px;
+      align-self: flex-end;
+      max-width: 75%;
+      color: #004D40;
+    }
+    .message-bot {
+      background-color: #FFF3E0;
+      border-radius: 20px;
+      padding: 10px 20px;
+      align-self: flex-start;
+      max-width: 75%;
+      color: #BF360C;
+    }
+    .message-related {
+      background-color: #E1BEE7;
+      border-radius: 20px;
+      padding: 10px 20px;
+      align-self: flex-start;
+      font-style: italic;
+      max-width: 75%;
+      cursor: pointer;
+      color: #4A148C;
+    }
+    .message-refined {
+      background-color: #FFE0B2;
+      border-radius: 20px;
+      padding: 10px 20px;
+      align-self: flex-start;
+      font-style: italic;
+      max-width: 75%;
+      color: #E65100;
+    }
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+    }
+    .dot {
+      border-radius: 50%;
+      width: 8px;
+      height: 8px;
+      margin: 0 2px;
+      animation: blink 1s infinite both;
+    }
+    .dot:nth-child(1) {
+      background-color: #FF6B6B;
+      animation-delay: 0s;
+    }
+    .dot:nth-child(2) {
+      background-color: #FECA57;
+      animation-delay: 0.2s;
+    }
+    .dot:nth-child(3) {
+      background-color: #54A0FF;
+      animation-delay: 0.4s;
+    }
+    @keyframes blink {
+      0%, 80%, 100% {
+        opacity: 0;
+      }
+      40% {
+        opacity: 1;
+      }
+    }
+    .bg-primary {
+      background-color: #00796B;
+      color: #FFFFFF;
+    }
+    .bg-secondary {
+      background-color: #004D40;
+      color: #FFFFFF;
+    }
+    .btn-primary {
+      background-color: #00796B;
+      color: #FFFFFF;
+    }
+    .btn-primary:hover {
+      background-color: #004D40;
+    }
+    .btn-secondary {
+      background-color: #FF6B6B;
+      color: #FFFFFF;
+    }
+    .btn-secondary:hover {
+      background-color: #E53935;
+    }
+  </style>
+
+  <script type="text/javascript">
+    var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
+    (function(){
+      var s1 = document.createElement("script"), s0 = document.getElementsByTagName("script")[0];
+      s1.async = true;
+      s1.src = 'https://embed.tawk.to/65e95b219131ed19d9761f34/1hobonvph';
+      s1.charset = 'UTF-8';
+      s1.setAttribute('crossorigin', '*');
+      s0.parentNode.insertBefore(s1, s0);
+    })();
+  </script>
+  <!--End of Tawk.to Script-->
+
+</head>
+<body class="bg-gray-200 h-screen flex items-center justify-center">
+  <div class="flex w-full h-full">
+    <div class="w-2/12 h-full bg-primary border-r border-gray-300 relative flex flex-col justify-between">
+      <div class="flex-grow overflow-y-auto">
+        <h2 class="text-center text-xl font-bold p-4">Chat History</h2>
+        <ul id="chat-history" class="list-disc px-8 chat-hist">
+          {% for request in list %}
+          <li>{{ request }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+      <div class="p-4 flex items-center justify-between border-t border-gray-300 bg-secondary">
+        <span id="username" class="font-bold">
+          {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+              <div class="messages">
+                  {% for category, message in messages %}
+                      <p class="{{ category }}">{{ message }}</p>
+                  {% endfor %}
+              </div>
+          {% endif %}
+      {% endwith %}
+        </span>
+        <button id="logout-button" class="px-4 py-2 btn-secondary rounded">Logout</button>
+      </div>
+    </div>
+    <div class="w-8/12 h-full flex flex-col">
+      <div class="flex-grow p-6 overflow-y-auto">
+        <div id="chat-container" class="flex flex-col space-y-4">
+          <div class="message-bot">
+            Hello! How can I assist you today?
+          </div>
+        </div>
+      </div>
+      <div class="p-4 bg-secondary">
+        <form id="chat-form" class="flex">
+          <input id="user-input" type="text" class="flex-grow p-4 rounded-l-lg border-t mr-0 border-b border-l text-gray-800 border-gray-200 bg-white" placeholder="Type your message here...">
+          <button id="mic-button" type="button" class="ml-4 px-6 py-2 bg-green-500 text-white font-semibold rounded-lg">🎤</button>
+          <button class="px-6 py-4 btn-primary rounded-r-lg uppercase border-blue-500 border-t border-b border-r">Send</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      document.getElementById('mic-button').addEventListener('click', startRecognition);
+    });
+
+    document.getElementById("chat-form").addEventListener("submit", async function(event) {
+      event.preventDefault();
+
+      const userInput = document.getElementById("user-input").value;
+      if (userInput.trim() === "") return;
+
+      const chatContainer = document.getElementById("chat-container");
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+      if (!["hi", "hello", "hey", "thanks", "great"].includes(userInput.toLowerCase())) {
+        const chatHistory = document.getElementById("chat-history");
+        const historyItem = document.createElement("li");
+        historyItem.textContent = userInput;
+        chatHistory.appendChild(historyItem);
+      }
+      // Add user message to chat
+      const userMessageElement = document.createElement("div");
+      userMessageElement.classList.add("message-user");
+      userMessageElement.textContent = userInput;
+      chatContainer.appendChild(userMessageElement);
+
+      // Add typing indicator
+      const typingIndicator = document.createElement("div");
+      typingIndicator.classList.add("typing-indicator");
+      typingIndicator.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+      chatContainer.appendChild(typingIndicator);
+      document.getElementById("user-input").value = "";
+
+      const response = await fetch("/send_message", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ message: userInput })
+      });
+      
+      const data = await response.json();
+      chatContainer.removeChild(typingIndicator);
+      if (data.response.trim() !== "I do not know, because it is irrelevant to our context."){
+        // Add refined query to chat
+        // if (data.refined_query){
+        //   const refinedMessageElement = document.createElement("div");
+        //   refinedMessageElement.classList.add("message-refined");
+        //   refinedMessageElement.textContent = "Refined Query: " + data.refined_query;
+        //   chatContainer.appendChild(refinedMessageElement);
+        // }
+        appendMessageWordByWord("bot", data.response, function() {
+          addRelatedQuestions(data.related_questions);
+        });
+      } else {
+        const responseElement = document.createElement("div");
+        responseElement.classList.add("message-bot");
+        responseElement.textContent = data.response;
+        chatContainer.appendChild(responseElement);
+      }
+      // Scroll to the bottom of the chat container
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    });
+
+    async function handleRelatedQuestionClick(question) {
+      const chatContainer = document.getElementById("chat-container");
+      const chatHistory = document.getElementById("chat-history");
+
+      const cleanedQuestion = question.replace(/^[0-9]+\.\s*/, '');
+      // Add related question to chat history
+      const historyItem = document.createElement("li");
+      historyItem.textContent = cleanedQuestion;
+      chatHistory.appendChild(historyItem);
+
+      // Add user message to chat
+      const userMessageElement = document.createElement("div");
+      userMessageElement.classList.add("message-user");
+      userMessageElement.textContent = cleanedQuestion;
+      chatContainer.appendChild(userMessageElement);
+
+      // Add typing indicator
+      const typingIndicator = document.createElement("div");
+      typingIndicator.classList.add("typing-indicator");
+      typingIndicator.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+      chatContainer.appendChild(typingIndicator);
+
+      const response = await fetch("/send_message", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ message: cleanedQuestion })
+      });
+
+      const data = await response.json();
+      chatContainer.removeChild(typingIndicator);
+
+      // Add refined query to chat
+      // const refinedMessageElement = document.createElement("div");
+      // refinedMessageElement.classList.add("message-refined");
+      // refinedMessageElement.textContent = "Refined Query: " + data.refined_query;
+      // chatContainer.appendChild(refinedMessageElement);
+      appendMessageWordByWord("bot", data.response, function() {
+        addRelatedQuestions(data.related_questions);
+      });
+
+      // Scroll to the bottom of the chat container
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+    function formatMessageNodes(message) {
+  const fragments = [];
+  const parts = message.split(/(\*\*.*?\*\*)/);
+
+  parts.forEach(part => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      const strong = document.createElement('strong');
+      strong.textContent = part.slice(2, -2);
+      fragments.push(strong);
+    } else {
+      fragments.push(document.createTextNode(part));
+    }
+  });
+
+  return fragments;
+}
+  function appendMessageWordByWord(sender, message, callback) {
+  const chatContainer = document.getElementById("chat-container");
+  const messageElement = document.createElement("div");
+
+  if (sender === "bot") {
+    messageElement.classList.add("message-bot");
+  } else {
+    messageElement.classList.add("message-user");
+  }
+
+  messageElement.style.whiteSpace = "pre-wrap"; // Preserve whitespace formatting
+  chatContainer.appendChild(messageElement);
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+
+  const fragments = formatMessageNodes(message);
+  let index = 0;
+  let wordIndex = 0;
+
+  function addNextWord() {
+    if (index < fragments.length) {
+      const fragment = fragments[index];
+      const words = fragment.textContent.split(" ");
+      
+      if (wordIndex < words.length) {
+        if (fragment.nodeName === "STRONG") {
+          const strong = document.createElement("strong");
+          strong.textContent = words[wordIndex];
+          messageElement.appendChild(strong);
+        } else {
+          messageElement.appendChild(document.createTextNode(words[wordIndex]));
+        }
+
+        messageElement.appendChild(document.createTextNode(" "));
+        wordIndex++;
+        setTimeout(addNextWord, 100); // Adjust the delay as needed
+      } else {
+        index++;
+        wordIndex = 0;
+        addNextWord();
+      }
+
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    } else if (callback) {
+      callback();
+    }
+  }
+
+  addNextWord();
+}
+
+    function addRelatedQuestions(relatedQuestions) {
+      if(relatedQuestions){
+      const chatContainer = document.getElementById("chat-container");
+
+      const heading = document.createElement("div");
+      heading.textContent = "Related Questions:";
+      heading.classList.add("font-bold", "mt-4");
+      chatContainer.appendChild(heading);
+
+      relatedQuestions.forEach((question) => {
+        const relatedMessageElement = document.createElement("div");
+        relatedMessageElement.classList.add("message-related");
+        relatedMessageElement.textContent = question;
+        relatedMessageElement.addEventListener("click", () => handleRelatedQuestionClick(question));
+        chatContainer.appendChild(relatedMessageElement);
+      });
+    }
+      // Scroll to the bottom of the chat container
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+    
+    document.getElementById("logout-button").addEventListener("click", function() {
+      // Handle logout logic here
+      alert("Logged out");
+      window.location.href = "/logout";
+      // Redirect to login page or perform other logout actions
+    });
+
+    function startRecognition() {
+       const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+       recognition.lang = 'en-US';
+       recognition.interimResults = false;
+       recognition.maxAlternatives = 1;
+
+       recognition.start();
+       recognition.onstart = function() {
+         console.log('Speech recognition started');
+       };
+       recognition.onresult = function(event) {
+         const transcript = event.results[0][0].transcript;
+         document.getElementById('user-input').value = transcript;
+         sendMessage();
+       };
+
+       recognition.onerror = function(event) {
+         console.error('Speech recognition error', event.error);
+       };
+
+       recognition.onspeechend = function() {
+         recognition.stop();
+       };
+    }
+  </script>
+</body>
+</html>
